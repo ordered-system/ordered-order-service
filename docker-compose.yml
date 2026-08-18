@@ -1,0 +1,20 @@
+services:
+  order-postgres:
+    image: postgres:16-alpine
+    container_name: order-postgres
+    environment:
+      POSTGRES_DB: order_db
+      POSTGRES_USER: order_service
+      POSTGRES_PASSWORD: order_service
+    ports:
+      - "5433:5432"
+    volumes:
+      - order_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U order_service -d order_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  order_postgres_data:

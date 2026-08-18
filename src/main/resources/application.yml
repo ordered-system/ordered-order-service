@@ -1,0 +1,92 @@
+spring:
+  application:
+    name: order-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/order_db}
+    username: ${DB_USERNAME:order_service}
+    password: ${DB_PASSWORD:order_service}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    template:
+      observation-enabled: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+server:
+  port: ${PORT:9091}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:change-me-in-prod-min-256-bits-long-please-replace}
+  outbox:
+    poll-interval-ms: 5000
+  payment:
+    retry-poll-interval-ms: 300000
+    max-retry-attempts: 5
+  product-service:
+    base-url: ${PRODUCT_SERVICE_URL:http://localhost:9090}
+
+stripe:
+  api-key: ${STRIPE_SECRET_KEY:sk_test_placeholder}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      stripePayments:
+        sliding-window-size: 10
+        sliding-window-type: COUNT_BASED
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        register-health-indicator: true
+      productService:
+        sliding-window-size: 10
+        sliding-window-type: COUNT_BASED
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 15s
+        permitted-number-of-calls-in-half-open-state: 3
+        register-health-indicator: true
+  retry:
+    instances:
+      stripePayments:
+        max-attempts: 3
+        wait-duration: 500ms
+        retry-exceptions:
+          - pl.dybcio.ordered.payment.service.PaymentProcessingException
+      productService:
+        max-attempts: 3
+        wait-duration: 300ms
+        retry-exceptions:
+          - java.io.IOException
+          - org.springframework.web.client.ResourceAccessException
+        ignore-exceptions:
+          - pl.dybcio.ordered.order.service.CheckoutReservationException
