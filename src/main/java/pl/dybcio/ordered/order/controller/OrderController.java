@@ -2,7 +2,6 @@ package pl.dybcio.ordered.order.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import pl.dybcio.ordered.order.dto.OrderResponse;
+import pl.dybcio.ordered.order.dto.PageResponse;
 import pl.dybcio.ordered.order.dto.PlaceOrderRequest;
 import pl.dybcio.ordered.order.dto.UpdateOrderStatusRequest;
 import pl.dybcio.ordered.order.entity.Order;
@@ -41,9 +41,9 @@ public class OrderController {
   }
 
   @GetMapping
-  public Page<OrderResponse> listMyOrders(
+  public PageResponse<OrderResponse> listMyOrders(
       @AuthenticationPrincipal AuthenticatedUser user, Pageable pageable) {
-    return orderService.listOrdersForUser(user.userId(), pageable).map(OrderResponse::from);
+    return PageResponse.from(orderService.listOrdersForUser(user.userId(), pageable));
   }
 
   @PatchMapping("/{orderId}/status")

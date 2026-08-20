@@ -3,12 +3,14 @@ package pl.dybcio.ordered.order.service;
 import java.util.Map;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.Hibernate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.dybcio.ordered.order.client.CheckoutReservationResponse;
 import pl.dybcio.ordered.order.dto.AddressSnapshot;
+import pl.dybcio.ordered.order.dto.OrderResponse;
 import pl.dybcio.ordered.order.entity.Order;
 import pl.dybcio.ordered.order.entity.OrderItem;
 import pl.dybcio.ordered.order.entity.OrderStatus;
@@ -63,6 +65,7 @@ public class OrderService {
             .payload(objectMapper.writeValueAsString(payload))
             .build());
 
+    Hibernate.initialize(savedOrder.getItems());
     return savedOrder;
   }
 
@@ -75,12 +78,13 @@ public class OrderService {
       throw new OrderNotFoundException(orderId);
     }
 
+    Hibernate.initialize(order.getItems());
     return order;
   }
 
   @Transactional(readOnly = true)
-  public Page<Order> listOrdersForUser(Long buyerId, Pageable pageable) {
-    return orderRepository.findByBuyerId(buyerId, pageable);
+  public Page<OrderResponse> listOrdersForUser(Long buyerId, Pageable pageable) {
+    return orderRepository.findByBuyerId(buyerId, pageable).map(OrderResponse::from);
   }
 
   private static final Map<OrderStatus, Set<OrderStatus>> ALLOWED_TRANSITIONS =
@@ -112,7 +116,9 @@ public class OrderService {
     }
 
     order.setStatus(newStatus);
-    return orderRepository.save(order);
+    Order saved = orderRepository.save(order);
+    Hibernate.initialize(saved.getItems());
+    return saved;
   }
 
   private void authorizeStatusChange(
@@ -136,7 +142,9 @@ public class OrderService {
     Order order =
         orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException(orderId));
     order.setStatus(result.isSuccess() ? OrderStatus.CONFIRMED : OrderStatus.PAYMENT_PENDING);
-    return orderRepository.save(order);
+    Order saved = orderRepository.save(order);
+    Hibernate.initialize(saved.getItems());
+    return saved;
   }
 
   @Transactional
