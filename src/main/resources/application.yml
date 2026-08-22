@@ -53,7 +53,7 @@ app:
     retry-poll-interval-ms: 300000
     max-retry-attempts: 5
   product-service:
-    base-url: ${PRODUCT_SERVICE_URL:http://localhost:9090}
+    base-url: ${PRODUCT_SERVICE_URL:http://localhost:9092}
 
 stripe:
   api-key: ${STRIPE_SECRET_KEY:sk_test_placeholder}
