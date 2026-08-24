@@ -51,6 +51,7 @@ public class StripePaymentService implements PaymentService {
               .setCurrency("pln")
               .setConfirm(true)
               .setPaymentMethod("pm_card_visa")
+              .addPaymentMethodType("card")
               .build();
 
       PaymentIntent intent = PaymentIntent.create(params, requestOptions);
