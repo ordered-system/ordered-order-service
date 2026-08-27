@@ -8,14 +8,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import pl.dybcio.ordered.commons.dto.PageResponse;
+import pl.dybcio.ordered.commons.security.AuthenticatedUser;
 import pl.dybcio.ordered.order.dto.OrderResponse;
-import pl.dybcio.ordered.order.dto.PageResponse;
 import pl.dybcio.ordered.order.dto.PlaceOrderRequest;
 import pl.dybcio.ordered.order.dto.UpdateOrderStatusRequest;
 import pl.dybcio.ordered.order.entity.Order;
 import pl.dybcio.ordered.order.service.OrderPlacementOrchestrator;
 import pl.dybcio.ordered.order.service.OrderService;
-import pl.dybcio.ordered.security.AuthenticatedUser;
 
 @RestController
 @RequestMapping("/api/v1/orders")

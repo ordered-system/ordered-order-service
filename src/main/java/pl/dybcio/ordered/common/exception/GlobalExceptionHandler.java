@@ -1,9 +1,7 @@
 package pl.dybcio.ordered.common.exception;
 
-import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import pl.dybcio.ordered.order.service.CheckoutReservationException;
@@ -14,15 +12,6 @@ import pl.dybcio.ordered.payment.service.PaymentProcessingException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
-  @ExceptionHandler(MethodArgumentNotValidException.class)
-  public ProblemDetail handleValidation(MethodArgumentNotValidException ex) {
-    String message =
-        ex.getBindingResult().getFieldErrors().stream()
-            .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
-            .collect(Collectors.joining("; "));
-    return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, message);
-  }
 
   @ExceptionHandler(OrderNotFoundException.class)
   public ProblemDetail handleOrderNotFound(OrderNotFoundException ex) {

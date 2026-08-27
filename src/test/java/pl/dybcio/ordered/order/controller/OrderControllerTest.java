@@ -26,6 +26,8 @@ import org.springframework.security.web.method.annotation.AuthenticationPrincipa
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import pl.dybcio.ordered.common.exception.GlobalExceptionHandler;
+import pl.dybcio.ordered.commons.exception.CommonExceptionHandler;
+import pl.dybcio.ordered.commons.security.AuthenticatedUser;
 import pl.dybcio.ordered.order.dto.OrderResponse;
 import pl.dybcio.ordered.order.entity.Order;
 import pl.dybcio.ordered.order.entity.OrderStatus;
@@ -34,7 +36,6 @@ import pl.dybcio.ordered.order.service.OrderNotFoundException;
 import pl.dybcio.ordered.order.service.OrderPlacementOrchestrator;
 import pl.dybcio.ordered.order.service.OrderService;
 import pl.dybcio.ordered.order.service.OrderStatusChangeNotAllowedException;
-import pl.dybcio.ordered.security.AuthenticatedUser;
 
 @ExtendWith(MockitoExtension.class)
 class OrderControllerTest {
@@ -54,7 +55,7 @@ class OrderControllerTest {
     OrderController controller = new OrderController(orchestrator, orderService);
     mockMvc =
         MockMvcBuilders.standaloneSetup(controller)
-            .setControllerAdvice(new GlobalExceptionHandler())
+            .setControllerAdvice(new GlobalExceptionHandler(), new CommonExceptionHandler())
             .setCustomArgumentResolvers(
                 new AuthenticationPrincipalArgumentResolver(),
                 new PageableHandlerMethodArgumentResolver())
