@@ -2,7 +2,7 @@ spring:
   application:
     name: order-service
   config:
-    import: "configserver:${CONFIG_SERVER_URL:http://localhost:8888}"
+    import: "optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}"
   cloud:
     config:
       fail-fast: true
@@ -58,9 +58,6 @@ management:
 server:
   port: ${PORT:9091}
 
-app:
-  jwt:
-    secret: ${JWT_SECRET:change-me-in-prod-min-256-bits-long-please-replace}
   outbox:
     poll-interval-ms: 5000
   payment:
