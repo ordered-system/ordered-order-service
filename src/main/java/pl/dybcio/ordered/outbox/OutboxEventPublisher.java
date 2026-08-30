@@ -53,6 +53,7 @@ public class OutboxEventPublisher {
     return switch (eventType) {
       case "OrderPlaced" -> KafkaTopics.ORDER_PLACED;
       case "OrderCancelled" -> KafkaTopics.ORDER_CANCELLED;
+      case "OrderDelivered" -> KafkaTopics.ORDER_DELIVERED;
       default -> throw new IllegalStateException("Unknown outbox event type: " + eventType);
     };
   }

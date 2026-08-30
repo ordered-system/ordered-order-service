@@ -21,6 +21,7 @@ import pl.dybcio.ordered.order.client.CheckoutReservationResponse;
 import pl.dybcio.ordered.order.dto.AddressSnapshot;
 import pl.dybcio.ordered.order.dto.OrderResponse;
 import pl.dybcio.ordered.order.entity.Order;
+import pl.dybcio.ordered.order.entity.OrderItem;
 import pl.dybcio.ordered.order.entity.OrderStatus;
 import pl.dybcio.ordered.order.repository.OrderRepository;
 import pl.dybcio.ordered.outbox.entity.OutboxEvent;
@@ -157,6 +158,7 @@ class OrderServiceTest {
     Order result = orderService.updateStatus(1L, 999L, true, OrderStatus.CONFIRMED);
 
     assertThat(result.getStatus()).isEqualTo(OrderStatus.CONFIRMED);
+    verifyNoInteractions(outboxEventRepository);
   }
 
   @Test
@@ -171,6 +173,44 @@ class OrderServiceTest {
   }
 
   @Test
+  void updateStatus_toDelivered_publishesOrderDeliveredEvent_withProductIdsFromItems() {
+    Order order = Order.builder().id(1L).buyerId(42L).status(OrderStatus.SHIPPED).build();
+    order.addItem(
+        OrderItem.builder()
+            .productId(10L)
+            .productName("Keyboard")
+            .quantity(1)
+            .unitPrice(BigDecimal.TEN)
+            .subtotal(BigDecimal.TEN)
+            .build());
+    order.addItem(
+        OrderItem.builder()
+            .productId(20L)
+            .productName("Mouse")
+            .quantity(2)
+            .unitPrice(BigDecimal.TEN)
+            .subtotal(BigDecimal.valueOf(20))
+            .build());
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
+
+    Order result = orderService.updateStatus(1L, 999L, true, OrderStatus.DELIVERED);
+
+    assertThat(result.getStatus()).isEqualTo(OrderStatus.DELIVERED);
+
+    ArgumentCaptor<OutboxEvent> captor = ArgumentCaptor.forClass(OutboxEvent.class);
+    verify(outboxEventRepository).save(captor.capture());
+    OutboxEvent event = captor.getValue();
+    assertThat(event.getAggregateType()).isEqualTo("Order");
+    assertThat(event.getAggregateId()).isEqualTo("1");
+    assertThat(event.getEventType()).isEqualTo("OrderDelivered");
+    assertThat(event.getPayload())
+        .contains("\"orderId\":1")
+        .contains("\"buyerId\":42")
+        .contains("\"productIds\":[10,20]");
+  }
+
+  @Test
   void updateStatus_rejectsBuyerTryingToShipTheirOwnOrder() {
     Order order = Order.builder().id(1L).buyerId(42L).status(OrderStatus.PENDING).build();
     when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
@@ -179,6 +219,7 @@ class OrderServiceTest {
         .isInstanceOf(OrderStatusChangeNotAllowedException.class);
 
     verify(orderRepository, never()).save(any());
+    verifyNoInteractions(outboxEventRepository);
   }
 
   @Test

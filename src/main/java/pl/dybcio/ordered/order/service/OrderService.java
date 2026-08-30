@@ -15,6 +15,7 @@ import pl.dybcio.ordered.order.entity.Order;
 import pl.dybcio.ordered.order.entity.OrderItem;
 import pl.dybcio.ordered.order.entity.OrderStatus;
 import pl.dybcio.ordered.order.event.OrderCancelledPayload;
+import pl.dybcio.ordered.order.event.OrderDeliveredPayload;
 import pl.dybcio.ordered.order.event.OrderPlacedPayload;
 import pl.dybcio.ordered.order.repository.OrderRepository;
 import pl.dybcio.ordered.outbox.entity.OutboxEvent;
@@ -118,6 +119,18 @@ public class OrderService {
     order.setStatus(newStatus);
     Order saved = orderRepository.save(order);
     Hibernate.initialize(saved.getItems());
+
+    if (newStatus == OrderStatus.DELIVERED) {
+      OrderDeliveredPayload payload = OrderDeliveredPayload.from(saved);
+      outboxEventRepository.save(
+          OutboxEvent.builder()
+              .aggregateType("Order")
+              .aggregateId(saved.getId().toString())
+              .eventType("OrderDelivered")
+              .payload(objectMapper.writeValueAsString(payload))
+              .build());
+    }
+
     return saved;
   }
 
