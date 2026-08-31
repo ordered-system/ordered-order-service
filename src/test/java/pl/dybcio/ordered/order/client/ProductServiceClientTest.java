@@ -29,7 +29,7 @@ class ProductServiceClientTest {
     server = MockRestServiceServer.bindTo(builder).build();
     MockEnvironment env =
         new MockEnvironment()
-            .withProperty("app.product-service.base-url", "http://product-service");
+            .withProperty("server.product-service.base-url", "http://product-service");
     client = new ProductServiceClient(builder, env);
   }
 
