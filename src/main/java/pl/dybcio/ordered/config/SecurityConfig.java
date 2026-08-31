@@ -21,7 +21,13 @@ public class SecurityConfig {
   private final ProblemDetailAuthenticationEntryPoint problemDetailAuthenticationEntryPoint;
 
   private static final String[] PUBLIC_ENDPOINTS = {
-    "/actuator/health", "/actuator/prometheus", "/error"
+    "/actuator/health",
+    "/actuator/prometheus",
+    "/error",
+    "/v3/api-docs",
+    "/v3/api-docs/**",
+    "/swagger-ui/**",
+    "/swagger-ui.html"
   };
 
   private static final String[] INTERNAL_ENDPOINTS = {"/internal/v1/**"};
