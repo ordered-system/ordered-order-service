@@ -19,7 +19,7 @@ public class ProductServiceClient {
   public ProductServiceClient(RestClient.Builder restClientBuilder, Environment env) {
     this.restClient =
         restClientBuilder
-            .baseUrl(Objects.requireNonNull(env.getProperty("app.product-service.base-url")))
+            .baseUrl(Objects.requireNonNull(env.getProperty("server.product-service.base-url")))
             .build();
   }
 
