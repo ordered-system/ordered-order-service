@@ -1,5 +1,7 @@
 package pl.dybcio.ordered.order.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -20,12 +22,19 @@ import pl.dybcio.ordered.order.service.OrderService;
 @RestController
 @RequestMapping("/api/v1/orders")
 @RequiredArgsConstructor
+@Tag(name = "Orders", description = "Placing orders and tracking their status")
 public class OrderController {
 
   private final OrderPlacementOrchestrator orchestrator;
   private final OrderService orderService;
 
   @PostMapping
+  @Operation(
+      summary = "Place an order",
+      description =
+          "Reserves stock, persists the order, then charges via Stripe. If payment fails, the"
+              + " stock reservation is released asynchronously via the order-cancelled outbox"
+              + " event.")
   public ResponseEntity<OrderResponse> placeOrder(
       @AuthenticationPrincipal AuthenticatedUser user,
       @Valid @RequestBody PlaceOrderRequest request) {
@@ -34,6 +43,9 @@ public class OrderController {
   }
 
   @GetMapping("/{orderId}")
+  @Operation(
+      summary = "Get an order by id",
+      description = "Buyers can only fetch their own orders; admins can fetch any order.")
   public OrderResponse getOrder(
       @AuthenticationPrincipal AuthenticatedUser user, @PathVariable Long orderId) {
     Order order = orderService.getOrderForUser(orderId, user.userId(), user.isAdmin());
@@ -41,6 +53,7 @@ public class OrderController {
   }
 
   @GetMapping
+  @Operation(summary = "List the authenticated user's own orders, paginated")
   public PageResponse<OrderResponse> listMyOrders(
       @AuthenticationPrincipal AuthenticatedUser user, Pageable pageable) {
     return PageResponse.from(orderService.listOrdersForUser(user.userId(), pageable));
@@ -48,6 +61,11 @@ public class OrderController {
 
   @PatchMapping("/{orderId}/status")
   @PreAuthorize("isAuthenticated()")
+  @Operation(
+      summary = "Update an order's status",
+      description =
+          "Transitioning to DELIVERED publishes the order-delivered event that"
+              + " engagement-service consumes to unlock reviews for the buyer.")
   public OrderResponse updateStatus(
       @AuthenticationPrincipal AuthenticatedUser user,
       @PathVariable Long orderId,
