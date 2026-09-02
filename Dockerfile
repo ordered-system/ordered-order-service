@@ -1,11 +1,17 @@
+FROM eclipse-temurin:21-jdk-alpine AS commons-build
+WORKDIR /commons
+COPY --from=commons . .
+RUN apk add --no-cache maven && \
+    mvn -B -q clean install -DskipTests
+
 FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /app
+COPY --from=commons-build /root/.m2 /root/.m2
 
 COPY pom.xml .
 COPY src ./src
 
-RUN --mount=type=cache,target=/root/.m2 \
-    apk add --no-cache maven && \
+RUN apk add --no-cache maven && \
     mvn -B -q clean package -DskipTests
 
 FROM eclipse-temurin:21-jre-alpine
