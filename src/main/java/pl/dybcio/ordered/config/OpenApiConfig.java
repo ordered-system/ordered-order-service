@@ -5,8 +5,11 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
 
 @Configuration
 public class OpenApiConfig {
@@ -25,6 +28,7 @@ public class OpenApiConfig {
                         + " ordered-system GitHub org.")
                 .version("v1"))
         .addSecurityItem(new SecurityRequirement().addList(BEARER_SCHEME_NAME))
+        .servers(List.of(new Server().url("/").description("API Gateway")))
         .components(
             new Components()
                 .addSecuritySchemes(
